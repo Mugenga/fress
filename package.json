@@ -30,5 +30,8 @@
     "nodemon": "^2.0.15",
     "string-template": "^1.0.0",
     "winston": "^3.3.3"
+  },
+  "engines": {
+    "node": "14.x"
   }
 }
