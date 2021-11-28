@@ -103,7 +103,7 @@ router.post(
           const filename = pathArr[pathArr.length - 1];
 
           req.body.media_url =
-            filename.split("\\")[1] + "\\" + filename.split("\\")[2];
+            filename.split("/")[1] + "/" + filename.split("/")[2];
           req.body.userId = ObjectID(
             getLoggedInUserId(req.header("x-auth-token"))
           );
