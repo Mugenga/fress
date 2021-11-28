@@ -1,18 +1,20 @@
-const router = require("express").Router();
-const { asyncMiddleware } = require("../middlewares/async");
-const _ = require("lodash");
-const { Post, validate } = require("../models/post");
 const base64Img = require("base64-img");
-const config = require("config");
-const jwt = require("jsonwebtoken");
-const { ObjectID } = require("mongodb");
 const isJSON = require("is-json");
+const router = require("express").Router();
+
+const { asyncMiddleware } = require("../middlewares/async");
+const { getLoggedInUserId, getMediaurl } = require("../tools/common");
+const { ObjectID } = require("mongodb");
+const { Post, validate } = require("../models/post");
+
+const _ = require("lodash");
 
 // Get Single Post
 router.get(
   "/:id",
   asyncMiddleware(async (req, res) => {
     const post = await Post.findById(req.params.id);
+    post.media_url = getMediaurl(post.media_url);
     return res.status(200).send({
       status: 200,
       post,
@@ -36,6 +38,7 @@ router.put(
         { new: true },
         function (err, doc) {
           if (err) return res.send(500, { error: err });
+          doc.media_url = getMediaurl(doc.media_url);
           return res.status(200).send({
             status: 200,
             post: doc,
@@ -96,10 +99,11 @@ router.post(
         "./public/posts",
         Date.now(),
         async function (err, filePath) {
-          const pathArr = filePath.split("/");
+          const pathArr = filePath.split("/public");
           const filename = pathArr[pathArr.length - 1];
 
-          req.body.media_url = filename;
+          req.body.media_url =
+            filename.split("\\")[1] + "\\" + filename.split("\\")[2];
           req.body.userId = ObjectID(
             getLoggedInUserId(req.header("x-auth-token"))
           );
@@ -108,7 +112,7 @@ router.post(
             _.pick(req.body, ["caption", "userId", "media_url"])
           );
           post = await post.save();
-
+          post.media_url = getMediaurl(post.media_url);
           return res.status(200).send({
             status: 200,
             post: _.pick(post, [
@@ -130,19 +134,28 @@ router.post(
 
       return res.status(200).send({
         status: 200,
-        post: _.pick(post, [
-          "caption",
-          "media_url",
-          "userId",
-          "likes",
-          "comments",
-        ]),
+        post: _.pick(post, ["caption", "userId", "likes", "comments"]),
         message: "successful",
       });
     }
   })
 );
 
+// Get All Posts
+router.get(
+  "/",
+  asyncMiddleware(async (req, res) => {
+    let posts = await Post.find();
+    posts.forEach((post) => (post.media_url = getMediaurl(post.media_url)));
+    return res.status(200).send({
+      status: 200,
+      post: posts,
+      message: "successful",
+    });
+  })
+);
+
+// Like Post
 router.post(
   "/like/:id",
   asyncMiddleware(async (req, res) => {
@@ -180,9 +193,43 @@ router.post(
   })
 );
 
-const getLoggedInUserId = (token) => {
-  const { id } = jwt.verify(token, config.get("app.jwtKey"));
-  return id;
-};
+// Comment on Post
+router.post(
+  "/comment/:id",
+  asyncMiddleware(async (req, res) => {
+    const post_id = req.params.id;
+    const query = {
+      _id: post_id,
+    };
+
+    const post = await Post.findById(post_id);
+    const comment = {
+      userId: ObjectID(getLoggedInUserId(req.header("x-auth-token"))),
+      comment: req.body.text,
+    };
+
+    if (post) {
+      Post.findOneAndUpdate(
+        query,
+        {
+          $push: {
+            comments: comment,
+          },
+        },
+        { new: true },
+        function (err, doc) {
+          if (err) return res.send(500, { error: err });
+          return res.status(200).send({
+            status: 200,
+            post: doc,
+            message: "successful",
+          });
+        }
+      );
+    } else {
+      res.status(400).json({ message: "User has already liked the post" });
+    }
+  })
+);
 
 module.exports = router;

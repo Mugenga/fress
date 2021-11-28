@@ -7,6 +7,7 @@ const app = express();
 const mongoCon = require("./src/startup/mongo");
 const bodyParser = require("body-parser");
 const port = process.env.PORT || 3000;
+const path = require('path');
 
 // Disable Powered By Header
 app.disable("x-powered-by");
@@ -22,7 +23,8 @@ app.use(
     limit: "5mb",
   })
 );
-app.use(express.static("./public"));
+
+app.use(express.static(path.join(__dirname, 'public'))); //  "public" off of current is root
 app.use(bodyParser.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 

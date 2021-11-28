@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     index: true
   },
+  profile_url: {type: String},
   password: { type: String },
   sex: {
     type: String,
