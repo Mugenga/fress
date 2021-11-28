@@ -166,7 +166,7 @@ router.put(
             const filename = pathArr[pathArr.length - 1];
             console.log(filename)
             req.body.profile_url =
-              filename.split("\\")[1] + "\\" + filename.split("\\")[2];
+              filename.split("/")[1] + "/" + filename.split("/")[2];
 
             User.findOneAndUpdate(
               { _id: userId },
