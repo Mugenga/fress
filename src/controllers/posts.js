@@ -14,7 +14,7 @@ router.get(
   "/:id",
   asyncMiddleware(async (req, res) => {
     const post = await Post.findById(req.params.id);
-    post.media_url = getMediaurl(post.media_url);
+    if (post.media_url) post.media_url = getMediaurl(post.media_url);
     return res.status(200).send({
       status: 200,
       post,
@@ -38,7 +38,9 @@ router.put(
         { new: true },
         function (err, doc) {
           if (err) return res.send(500, { error: err });
-          doc.media_url = getMediaurl(doc.media_url);
+          if (doc.media_url) {
+            doc.media_url = getMediaurl(doc.media_url);
+          }
           return res.status(200).send({
             status: 200,
             post: doc,
@@ -112,7 +114,9 @@ router.post(
             _.pick(req.body, ["caption", "userId", "media_url"])
           );
           post = await post.save();
-          post.media_url = getMediaurl(post.media_url);
+          if (post.media_url) {
+            post.media_url = getMediaurl(post.media_url);
+          }
           return res.status(200).send({
             status: 200,
             post: _.pick(post, [
@@ -146,7 +150,9 @@ router.get(
   "/",
   asyncMiddleware(async (req, res) => {
     let posts = await Post.find();
-    posts.forEach((post) => (post.media_url = getMediaurl(post.media_url)));
+    posts.forEach((post) => {
+      if (post.media_url) post.media_url = getMediaurl(post.media_url);
+    });
     return res.status(200).send({
       status: 200,
       post: posts,
