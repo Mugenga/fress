@@ -145,6 +145,18 @@ router.get(
   })
 );
 
+router.get(
+  "/all",
+  asyncMiddleware(async (req, res) => {
+    const user = await User.findById();
+    return res.status(200).send({
+      status: 200,
+      user,
+      message: "successful",
+    });
+  })
+);
+
 // Edit User/Uploading Profile Picture
 router.put(
   "/",
@@ -164,7 +176,7 @@ router.put(
             if (err) return res.send(500, { error: err });
             const pathArr = filePath.split("/public");
             const filename = pathArr[pathArr.length - 1];
-            console.log(filename)
+            console.log(filename);
             req.body.profile_url =
               filename.split("/")[1] + "/" + filename.split("/")[2];
 
