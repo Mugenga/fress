@@ -148,7 +148,7 @@ router.get(
 router.get(
   "/all",
   asyncMiddleware(async (req, res) => {
-    const user = await User.findById();
+    const user = await User.find();
     return res.status(200).send({
       status: 200,
       user,
