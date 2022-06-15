@@ -2,6 +2,7 @@ const config = require("config");
 const jwt = require("jsonwebtoken");
 
 const getLoggedInUserId = (token) => {
+  token = token.substring(7, authHeader.length);
   const { id } = jwt.verify(token, config.get("app.jwtKey"));
   return id;
 };

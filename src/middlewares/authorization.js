@@ -5,7 +5,7 @@ const { User } = require("../models/user");
 
 /**** JWT Authorization Middleware */
 module.exports.isAuthorized = async (req, res, next) => {
-  const token = req.header("x-auth-token");
+  const token = req.header("Authorization").substring(7, authHeader.length);
   if (!token)
     return res
       .status(401)
@@ -15,7 +15,7 @@ module.exports.isAuthorized = async (req, res, next) => {
     const { id } = jwt.verify(token, config.get("app.jwtKey"));
 
     const { _id } = await User.findById(id); // Find an other way to resolve this issue of hitting database
-    next()
+    next();
   } catch (error) {
     logger.warn({ authorization_err: error });
     return res

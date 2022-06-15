@@ -107,7 +107,7 @@ router.post(
           req.body.media_url =
             filename.split("/")[1] + "/" + filename.split("/")[2];
           req.body.userId = ObjectID(
-            getLoggedInUserId(req.header("x-auth-token"))
+            getLoggedInUserId(req.header("Authorization"))
           );
 
           let post = new Post(
@@ -131,7 +131,7 @@ router.post(
         }
       );
     } else {
-      req.body.userId = ObjectID(getLoggedInUserId(req.header("x-auth-token")));
+      req.body.userId = ObjectID(getLoggedInUserId(req.header("Authorization")));
 
       let post = new Post(_.pick(req.body, ["caption", "userId", "media_url"]));
       post = await post.save();
@@ -172,7 +172,7 @@ router.post(
 
     const post = await Post.find({
       _id: post_id,
-      likes: ObjectID(getLoggedInUserId(req.header("x-auth-token"))),
+      likes: ObjectID(getLoggedInUserId(req.header("Authorization"))),
     });
     console.log(post);
     if (post.length === 0) {
@@ -180,7 +180,7 @@ router.post(
         query,
         {
           $push: {
-            likes: ObjectID(getLoggedInUserId(req.header("x-auth-token"))),
+            likes: ObjectID(getLoggedInUserId(req.header("Authorization"))),
           },
         },
         { new: true },
@@ -210,7 +210,7 @@ router.post(
 
     const post = await Post.findById(post_id);
     const comment = {
-      userId: ObjectID(getLoggedInUserId(req.header("x-auth-token"))),
+      userId: ObjectID(getLoggedInUserId(req.header("Authorization"))),
       comment: req.body.text,
     };
 
