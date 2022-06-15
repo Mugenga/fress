@@ -113,7 +113,7 @@ router.post("/authenticate", async (req, res) => {
       .header("x-auth-token", token)
       .send({
         status: 200,
-        content: {
+        data: {
           info: _.pick(user, ["surname", "foreName", "email", "_id"]),
           token: token, // Should be remove from body
         },
