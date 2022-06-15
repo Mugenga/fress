@@ -135,7 +135,7 @@ router.get(
   authorized,
   asyncMiddleware(async (req, res) => {
     const user = await User.findById(
-      ObjectID(getLoggedInUserId(req.header("x-auth-token")))
+      ObjectID(getLoggedInUserId(req.header("Authorization")))
     );
     user.profile_url = user.profile_url ? getMediaurl(user.profile_url) : "";
     return res.status(200).send({
@@ -163,7 +163,7 @@ router.put(
   "/",
   authorized,
   asyncMiddleware(async (req, res) => {
-    const userId = ObjectID(getLoggedInUserId(req.header("x-auth-token")));
+    const userId = ObjectID(getLoggedInUserId(req.header("Authorization")));
     const user = await User.findById(userId);
 
     if (user) {
