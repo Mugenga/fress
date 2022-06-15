@@ -5,7 +5,7 @@ const { User } = require("../models/user");
 
 /**** JWT Authorization Middleware */
 module.exports.isAuthorized = async (req, res, next) => {
-  const token = req.header("Authorization").substring(7, authHeader.length);
+  const token = req.header("Authorization").substring(7, req.header("Authorization").length);
   if (!token)
     return res
       .status(401)
