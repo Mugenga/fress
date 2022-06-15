@@ -117,6 +117,7 @@ router.post("/authenticate", async (req, res) => {
           info: _.pick(user, ["surname", "foreName", "email", "_id"]),
           token: token, // Should be remove from body
         },
+        token: token, // Should be remove from body
         message: "Login Successful!",
       });
   } catch (error) {
