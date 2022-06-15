@@ -2,8 +2,8 @@ const config = require("config");
 const jwt = require("jsonwebtoken");
 
 const getLoggedInUserId = (token) => {
-  token = token.substring(7, req.header("Authorization").length);
-  const { id } = jwt.verify(token, config.get("app.jwtKey"));
+  const tok = token.substring(7, token.length);
+  const { id } = jwt.verify(tok, config.get("app.jwtKey"));
   return id;
 };
 
