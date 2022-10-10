@@ -13,8 +13,13 @@ const _ = require("lodash");
 router.get(
   "/:id",
   asyncMiddleware(async (req, res) => {
+<<<<<<< HEAD:src/controllers/quizzes.js
     const post = await Quiz.findById(req.params.id);
     post.media_url = getMediaurl(post.media_url);
+=======
+    const post = await Post.findById(req.params.id);
+    if (post.media_url) post.media_url = getMediaurl(post.media_url);
+>>>>>>> d1bc18ee4d516b7befde78d9addfc491c1ab1b39:src/controllers/posts.js
     return res.status(200).send({
       status: 200,
       post,
@@ -38,7 +43,9 @@ router.put(
         { new: true },
         function (err, doc) {
           if (err) return res.send(500, { error: err });
-          doc.media_url = getMediaurl(doc.media_url);
+          if (doc.media_url) {
+            doc.media_url = getMediaurl(doc.media_url);
+          }
           return res.status(200).send({
             status: 200,
             post: doc,
@@ -92,9 +99,53 @@ router.post(
         errors: [error.details[0].message],
       });
 
+<<<<<<< HEAD:src/controllers/quizzes.js
       let quiz = new Quiz(req.body);
       // let quiz = new Quiz(_.pick(req.body, ["caption", "userId", "media_url"]));
       quiz = await quiz.save();
+=======
+    const image = req.body.media;
+    if (image) {
+      base64Img.img(
+        image,
+        "./public/posts",
+        Date.now(),
+        async function (err, filePath) {
+          const pathArr = filePath.split("/public");
+          const filename = pathArr[pathArr.length - 1];
+
+          req.body.media_url =
+            filename.split("/")[1] + "/" + filename.split("/")[2];
+          req.body.userId = ObjectID(
+            getLoggedInUserId(req.header("Authorization"))
+          );
+
+          let post = new Post(
+            _.pick(req.body, ["caption", "userId", "media_url"])
+          );
+          post = await post.save();
+          if (post.media_url) {
+            post.media_url = getMediaurl(post.media_url);
+          }
+          return res.status(200).send({
+            status: 200,
+            post: _.pick(post, [
+              "caption",
+              "media_url",
+              "userId",
+              "likes",
+              "comments",
+            ]),
+            message: "successful",
+          });
+        }
+      );
+    } else {
+      req.body.userId = ObjectID(getLoggedInUserId(req.header("Authorization")));
+
+      let post = new Post(_.pick(req.body, ["caption", "userId", "media_url"]));
+      post = await post.save();
+>>>>>>> d1bc18ee4d516b7befde78d9addfc491c1ab1b39:src/controllers/posts.js
 
       return res.status(200).send({
         status: 200,
@@ -108,7 +159,14 @@ router.post(
 router.get(
   "/",
   asyncMiddleware(async (req, res) => {
+<<<<<<< HEAD:src/controllers/quizzes.js
     const quizzes = await Quiz.find();
+=======
+    let posts = await Post.find();
+    posts.forEach((post) => {
+      if (post.media_url) post.media_url = getMediaurl(post.media_url);
+    });
+>>>>>>> d1bc18ee4d516b7befde78d9addfc491c1ab1b39:src/controllers/posts.js
     return res.status(200).send({
       status: 200,
       data: quizzes,
@@ -128,7 +186,7 @@ router.post(
 
     const post = await Post.find({
       _id: post_id,
-      likes: ObjectID(getLoggedInUserId(req.header("x-auth-token"))),
+      likes: ObjectID(getLoggedInUserId(req.header("Authorization"))),
     });
     console.log(post);
     if (post.length === 0) {
@@ -136,7 +194,7 @@ router.post(
         query,
         {
           $push: {
-            likes: ObjectID(getLoggedInUserId(req.header("x-auth-token"))),
+            likes: ObjectID(getLoggedInUserId(req.header("Authorization"))),
           },
         },
         { new: true },
@@ -166,7 +224,7 @@ router.post(
 
     const post = await Post.findById(post_id);
     const comment = {
-      userId: ObjectID(getLoggedInUserId(req.header("x-auth-token"))),
+      userId: ObjectID(getLoggedInUserId(req.header("Authorization"))),
       comment: req.body.text,
     };
 

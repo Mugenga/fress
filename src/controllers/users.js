@@ -120,9 +120,15 @@ router.post("/authenticate", async (req, res) => {
       .send({
         status: 200,
         data: {
+<<<<<<< HEAD
           user: user,
           token: token
+=======
+          info: _.pick(user, ["surname", "foreName", "email", "_id"]),
+          token: token, // Should be remove from body
+>>>>>>> d1bc18ee4d516b7befde78d9addfc491c1ab1b39
         },
+        token: token, // Should be remove from body
         message: "Login Successful!",
       });
   } catch (error) {
@@ -134,4 +140,100 @@ router.post("/authenticate", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
+=======
+// Get LoggedIn User
+router.get(
+  "/",
+  authorized,
+  asyncMiddleware(async (req, res) => {
+    const user = await User.findById(
+      ObjectID(getLoggedInUserId(req.header("Authorization")))
+    );
+    user.profile_url = user.profile_url ? getMediaurl(user.profile_url) : "";
+    return res.status(200).send({
+      status: 200,
+      user,
+      message: "successful",
+    });
+  })
+);
+
+router.get(
+  "/all",
+  asyncMiddleware(async (req, res) => {
+    const user = await User.find();
+    return res.status(200).send({
+      status: 200,
+      user,
+      message: "successful",
+    });
+  })
+);
+
+// Edit User/Uploading Profile Picture
+router.put(
+  "/",
+  authorized,
+  asyncMiddleware(async (req, res) => {
+    const userId = ObjectID(getLoggedInUserId(req.header("Authorization")));
+    const user = await User.findById(userId);
+
+    if (user) {
+      const image = req.body.media;
+      if (image) {
+        base64Img.img(
+          image,
+          "./public/profiles",
+          Date.now(),
+          async function (err, filePath) {
+            if (err) return res.send(500, { error: err });
+            const pathArr = filePath.split("/public");
+            const filename = pathArr[pathArr.length - 1];
+            console.log(filename);
+            req.body.profile_url =
+              filename.split("/")[1] + "/" + filename.split("/")[2];
+
+            User.findOneAndUpdate(
+              { _id: userId },
+              { $set: req.body },
+              { new: true },
+              function (err, doc) {
+                if (err) return res.send(500, { error: err });
+                doc.profile_url = getMediaurl(doc.profile_url);
+                return res.status(200).send({
+                  status: 200,
+                  post: doc,
+                  message: "successful",
+                });
+              }
+            );
+          }
+        );
+      } else {
+        User.findOneAndUpdate(
+          { _id: userId },
+          { $set: req.body },
+          { new: true },
+          function (err, doc) {
+            if (err) return res.send(500, { error: err });
+            doc.profile_url = getMediaurl(doc.profile_url);
+            return res.status(200).send({
+              status: 200,
+              post: doc,
+              message: "successful",
+            });
+          }
+        );
+      }
+    } else {
+      return res.status(404).send({
+        status: 404,
+        message: "User not found",
+      });
+    }
+  })
+);
+
+>>>>>>> d1bc18ee4d516b7befde78d9addfc491c1ab1b39
 module.exports = router;
