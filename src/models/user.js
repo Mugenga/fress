@@ -6,40 +6,13 @@ const timestamps = require("mongoose-timestamp");
 const Joi = require("@hapi/joi");
 
 const userSchema = new mongoose.Schema({
-  foreName: {
-    type: String,
-    maxlength: 100,
-    trim: true,
-    index: true,
-    uppercase: true
-  },
-  surname: {
-    type: String,
-    maxlength: 100,
-    trim: true,
-    index: true,
-    uppercase: true
-  },
-  email: {
-    type: String,
-    match: /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:.[a-zA-Z0-9-]+)*$/,
-    lowercase: true,
-    trim: true,
-    sparse: true,
-    unique: true,
-    index: true
-  },
-  profile_url: {type: String},
-  password: { type: String },
-  sex: {
-    type: String,
-    enum: ["M", "F", ""],
-    uppercase: true,
-    trim: true,
-    index: true
-  },
-  status: { type: Number, default: 0 }, // pending:0, active:1, locked:2,  expired:3
+  phone_number: {type: String},
+  otp_secret: { type: String },
+  is_otp_verified: {type: Boolean, default: false},
+  last_subscribed_at: {type: Date},
+  subscription_ends_at: {type: Date},
 });
+
 // auto-assigned to the most recent create/update timestamp
 userSchema.plugin(timestamps, {
   createdAt: "created_at",
@@ -59,30 +32,11 @@ const users = mongoose.model("users", userSchema);
 
 const validateUser = userData => {
   const schema = {
-    foreName: Joi.string()
+    phone_number: Joi.string()
       .min(1)
       .required(),
-    surname: Joi.string()
-      .min(2)
-      .max(100)
-      .required(),
-    email: Joi.string()
-      .min(5)
-      .max(255)
-      .email()
-      .required(),
-    password: Joi.string()
-      .min(8)
-      .max(255)
-      .required(),
-    sex: Joi.string()
-      .valid()
-      .required(),
-    status: Joi.number()
-      .min(0)
-      .max(9)
   };
-  return Joi.object(schema).validate(userData); //, { convert: false }
+  return Joi.object(schema).validate(userData);
 };
 
 // Validation of National ID
@@ -103,18 +57,16 @@ const validateEmail = isEmail => {
 
 const validateLogin = login => {
   const schema = {
-    email: Joi.string()
-      .min(5)
-      .max(255)
-      // .email()
+    phone_number: Joi.string()
+      .min(10)
+      .max(12)
       .regex(
-        /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:.[a-zA-Z0-9-]+)*$/,
-        "Email"
+        /^\d/,
+        "Phone Number"
       )
       .required(),
-    password: Joi.string()
-      .min(8)
-      .max(255)
+    otp: Joi.number()
+      .min(6)
       .required()
   };
   return Joi.object(schema).validate(login);
@@ -129,115 +81,6 @@ const validateToken = isToken => {
       .required()
   };
   return Joi.validate(isToken, schema);
-};
-
-//Basic Edit user
-const validateUserUpdate = updateUserData => {
-  const schema = {
-    id: Joi.objectId().required(),
-    foreName: Joi.string()
-      .min(1)
-      .max(100),
-    surname: Joi.string()
-      .min(2)
-      .max(100),
-    phone_number: Joi.string()
-      .regex(/^2507\d{8}$/, "Phone number")
-      .trim(),
-
-    dob: Joi.date(),
-    NID: Joi.string()
-      .length(16)
-      .trim(),
-
-    sex: Joi.string().valid(["m", "f"]),
-
-    org_id: Joi.objectId(),
-
-    location: Joi.object({
-      prov_id: Joi.objectId().required(),
-      dist_id: Joi.objectId().required(),
-      sect_id: Joi.objectId(),
-      cell_id: Joi.objectId(),
-      village_id: Joi.objectId()
-    }),
-    lastModifiedBy: Joi.object({
-      _id: Joi.objectId().required(),
-      name: Joi.string().required()
-    }).required()
-  };
-  return Joi.validate(updateUserData, schema, { convert: true });
-};
-
-//Full User Edit Validator
-const validateUserUpdateFull = updateUserData => {
-  const schema = {
-    id: Joi.objectId().required(),
-    foreName: Joi.string()
-      .min(2)
-      .max(100),
-
-    surname: Joi.string()
-      .min(2)
-      .max(100),
-
-    hasAccessTo: Joi.array().items(
-      Joi.object({
-        app: Joi.number().required(),
-        userType: Joi.number().required()
-      })
-    ),
-
-    // Here email should be edited only if account is still inactive
-    // Means user is yet approved email
-    email: Joi.string()
-      .min(5)
-      .max(255)
-      .regex(
-        /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:.[a-zA-Z0-9-]+)*$/,
-        "Email"
-      ),
-
-    // Editing organization is only available for naeb && BKTECH
-    org_id: Joi.objectId(),
-
-    userRoles: Joi.array().items(Joi.number().required()),
-
-    phone_number: Joi.string()
-      .regex(/^2507\d{8}$/, "Phone number")
-      .trim(),
-
-    dob: Joi.date(),
-    NID: Joi.string()
-      .length(16)
-      .trim(),
-
-    sex: Joi.string().valid(["m", "f"]),
-
-    location: Joi.object({
-      prov_id: Joi.objectId().required(),
-      dist_id: Joi.objectId().required(),
-      sect_id: Joi.objectId(),
-      cell_id: Joi.objectId(),
-      village_id: Joi.objectId()
-    }),
-    status: Joi.number()
-      .min(0)
-      .max(9),
-    approvedBy: Joi.object({
-      _id: Joi.objectId().required(),
-      name: Joi.string().required()
-    }),
-    doneById: Joi.objectId().required(),
-    // with above doneById, Below now become useless
-    lastModifiedBy: Joi.object({
-      _id: Joi.objectId().required(),
-      name: Joi.string().required()
-    }).required(),
-    userType: Joi.number(),
-    accountExpirationDate: Joi.date()
-  };
-  return Joi.validate(updateUserData, schema, { convert: true });
 };
 
 const validateSendMail = data => {
@@ -262,8 +105,6 @@ const validateSendMail = data => {
 
 
 module.exports.User = users;
-module.exports.validateBasicUpdate = validateUserUpdate;
-module.exports.validateUserUpdateFull = validateUserUpdateFull;
 module.exports.validate = validateUser;
 module.exports.isEmail = validateEmail;
 module.exports.validateLogin = validateLogin;

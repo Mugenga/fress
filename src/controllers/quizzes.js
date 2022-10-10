@@ -5,7 +5,7 @@ const router = require("express").Router();
 const { asyncMiddleware } = require("../middlewares/async");
 const { getLoggedInUserId, getMediaurl } = require("../tools/common");
 const { ObjectID } = require("mongodb");
-const { Post, validate } = require("../models/post");
+const { Quiz, validate } = require("../models/quiz");
 
 const _ = require("lodash");
 
@@ -13,7 +13,7 @@ const _ = require("lodash");
 router.get(
   "/:id",
   asyncMiddleware(async (req, res) => {
-    const post = await Post.findById(req.params.id);
+    const post = await Quiz.findById(req.params.id);
     post.media_url = getMediaurl(post.media_url);
     return res.status(200).send({
       status: 200,
@@ -27,7 +27,7 @@ router.get(
 router.put(
   "/:id",
   asyncMiddleware(async (req, res) => {
-    const post = await Post.findById(req.params.id);
+    const post = await Quiz.findById(req.params.id);
     if (post) {
       const query = {
         _id: req.params.id,
@@ -56,7 +56,7 @@ router.put(
 router.delete(
   "/:id",
   asyncMiddleware(async (req, res) => {
-    const post = await Post.findById(req.params.id);
+    const post = await Quiz.findById(req.params.id);
     if (post) {
       var query = {
         _id: req.params.id,
@@ -92,52 +92,15 @@ router.post(
         errors: [error.details[0].message],
       });
 
-    const image = req.body.media;
-    if (image) {
-      base64Img.img(
-        image,
-        "./public/posts",
-        Date.now(),
-        async function (err, filePath) {
-          const pathArr = filePath.split("/public");
-          const filename = pathArr[pathArr.length - 1];
-
-          req.body.media_url =
-            filename.split("/")[1] + "/" + filename.split("/")[2];
-          req.body.userId = ObjectID(
-            getLoggedInUserId(req.header("x-auth-token"))
-          );
-
-          let post = new Post(
-            _.pick(req.body, ["caption", "userId", "media_url"])
-          );
-          post = await post.save();
-          post.media_url = getMediaurl(post.media_url);
-          return res.status(200).send({
-            status: 200,
-            post: _.pick(post, [
-              "caption",
-              "media_url",
-              "userId",
-              "likes",
-              "comments",
-            ]),
-            message: "successful",
-          });
-        }
-      );
-    } else {
-      req.body.userId = ObjectID(getLoggedInUserId(req.header("x-auth-token")));
-
-      let post = new Post(_.pick(req.body, ["caption", "userId", "media_url"]));
-      post = await post.save();
+      let quiz = new Quiz(req.body);
+      // let quiz = new Quiz(_.pick(req.body, ["caption", "userId", "media_url"]));
+      quiz = await quiz.save();
 
       return res.status(200).send({
         status: 200,
-        post: _.pick(post, ["caption", "userId", "likes", "comments"]),
+        quiz: quiz,
         message: "successful",
       });
-    }
   })
 );
 
@@ -145,11 +108,10 @@ router.post(
 router.get(
   "/",
   asyncMiddleware(async (req, res) => {
-    let posts = await Post.find();
-    posts.forEach((post) => (post.media_url = getMediaurl(post.media_url)));
+    const quizzes = await Quiz.find();
     return res.status(200).send({
       status: 200,
-      post: posts,
+      data: quizzes,
       message: "successful",
     });
   })

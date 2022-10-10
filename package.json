@@ -28,6 +28,7 @@
     "mongoose": "^6.0.13",
     "mongoose-timestamp": "^0.6.0",
     "nodemon": "^2.0.15",
+    "speakeasy": "^2.0.0",
     "string-template": "^1.0.0",
     "winston": "^3.3.3"
   },

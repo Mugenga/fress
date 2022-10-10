@@ -2,7 +2,7 @@
 const authorized = require("../middlewares/authorization").isAuthorized;
 const error = require("../middlewares/error");
 const user = require("../controllers/users");
-const post = require("../controllers/posts");
+const post = require("../controllers/quizzes");
 const index = require("../controllers/index");
 
 const mountRoutes = (app) => {
@@ -20,7 +20,7 @@ const mountRoutes = (app) => {
 
   app.use("/", index);
   app.use("/users", user);
-  app.use("/posts", authorized, post);
+  app.use("/quizzes", post);
 
   // Call error handling at the end
   app.use(error);
